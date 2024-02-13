@@ -6,26 +6,35 @@ import (
 	"github.com/gocolly/colly"
 )
 
-var url string = "https://www.amazon.com/Gopher-Lover-Pocket-T-Shirt/dp/B09FZQ55K1"
-
-type Product struct {
-	name string
+type item struct {
+	Name   string `json:"name"`
+	Price  string `json:"price"`
+	ImgUrl string `json:"imgurl"`
 }
 
+// site to be scraped
+var url string = "https://books.toscrape.com"
+
+// scrape selector
 func main() {
 	scrape(url)
 }
 
 func scrape(url string) {
-	c := colly.NewCollector()
+	c := colly.NewCollector(colly.AllowedDomains("books.toscrape.com"))
 
 	c.OnRequest(func(request *colly.Request) {
 		fmt.Println("Visting", request.URL)
 	})
 
-	c.OnHTML("#dp-container", func(e *colly.HTMLElement) {
-		name := e.ChildText("#centerCol #productTitle")
-		fmt.Println(Product{name})
+	c.OnHTML("article[class=product_pod]", func(e *colly.HTMLElement) {
+		item := item{
+			Name:   e.ChildText("h3"),
+			Price:  e.ChildText("p[class=price_color]"),
+			ImgUrl: e.ChildAttr("a", "href"),
+		}
+
+		fmt.Println(item)
 	})
 
 	c.Visit(url)
