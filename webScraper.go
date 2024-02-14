@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/gocolly/colly"
 )
@@ -40,5 +42,11 @@ func main() {
 	})
 
 	c.Visit(url)
-	fmt.Println(items)
+
+	file, err := os.Create("scraped.csv")
+	if err != nil {
+		log.Fatalln("Failed to create file", err)
+	}
+	defer file.Close()
+
 }
