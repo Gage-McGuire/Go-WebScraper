@@ -15,17 +15,10 @@ type item struct {
 // site to be scraped
 var url string = "https://books.toscrape.com"
 
-// scrape selector
 func main() {
-	scrape(url)
-}
-
-func scrape(url string) {
 	c := colly.NewCollector(colly.AllowedDomains("books.toscrape.com"))
 
-	c.OnRequest(func(request *colly.Request) {
-		fmt.Println("Visting", request.URL)
-	})
+	var items []item
 
 	c.OnHTML("article[class=product_pod]", func(e *colly.HTMLElement) {
 		item := item{
@@ -34,8 +27,18 @@ func scrape(url string) {
 			ImgUrl: e.ChildAttr("a", "href"),
 		}
 
-		fmt.Println(item)
+		items = append(items, item)
+	})
+
+	c.OnHTML("[class=next]", func(e *colly.HTMLElement) {
+		next_page := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
+		c.Visit(next_page)
+	})
+
+	c.OnRequest(func(e *colly.Request) {
+		fmt.Println(e.URL.String())
 	})
 
 	c.Visit(url)
+	fmt.Println(items)
 }
